@@ -24,7 +24,7 @@ def process_image(image):
     contours, _ = cv2.findContours(thresh_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # Filter out small contours
-    min_area = 2500  # Adjust this based on your image
+    min_area = 3000  # Adjust this based on your image
     filtered_contours = [contour for contour in contours if cv2.contourArea(contour) > min_area]
 
     # Display each cropped rice grain and collect selection information
