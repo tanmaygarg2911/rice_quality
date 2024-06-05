@@ -28,7 +28,7 @@ def process_image(image):
     filtered_contours = [contour for contour in contours if cv2.contourArea(contour) > min_area]
 
     # Display each cropped rice grain and collect selection information
-    max_images_per_row = 4  # Define the maximum number of images per row
+    max_images_per_row = 4 # Define the maximum number of images per row
     for i, contour in enumerate(filtered_contours):
         # Get bounding box for each contour
         x, y, w, h = cv2.boundingRect(contour)
@@ -39,11 +39,12 @@ def process_image(image):
         # Display the cropped rice grain
         if i % max_images_per_row == 0:
             col = st.columns(max_images_per_row)  # Create a new row
-        col[i % max_images_per_row].image(cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB), caption=f"Rice Grain {i + 1}")
+        with col[i % max_images_per_row]:
+            st.image(cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB), caption=f"Rice Grain {i + 1}")
 
-        # Checkbox for selection
-        if col[i % max_images_per_row].checkbox(f"Select Rice Grain {i + 1}", key=f"select_{i}"):
-            selections.append((f"Rice Grain {i + 1}", cropped_image))
+            # Checkbox for selection
+            if st.checkbox(f"Select Rice Grain {i + 1}", key=f"select_{i}"):
+                selections.append((f"Rice Grain {i + 1}", cropped_image))
 
     st.write(f"Extracted and displayed {len(filtered_contours)} rice grains.")
     return selections
@@ -64,7 +65,26 @@ def save_to_zip(selections):
     return zip_data
 
 # Streamlit app
+st.set_page_config(layout="wide")  # Utilize full screen
 st.title("Rice Grain Extraction")
+
+# Add background color
+st.markdown(
+    """
+    <style>
+    .reportview-container {
+        background: #f0f2f6
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Instructions
+with st.expander("Instructions", expanded=True):
+    st.markdown("1. Upload an image containing rice grains.")
+    st.markdown("2. Select the rice grains you want to extract.")
+    st.markdown("3. Click the 'Extract' button to download the selected rice grains as a ZIP file.")
 
 # File uploader for image input
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
