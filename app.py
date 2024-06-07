@@ -1,15 +1,15 @@
 import streamlit as st
 import cv2
 import numpy as np
-import pandas as pd
-from io import BytesIO
-import zipfile
 import tempfile
 import os
+from io import BytesIO
+import zipfile
 
 # Function to process the image and extract rice grains
 def process_image(image):
-    selections = []  # List to store selected images
+    image_info = []  # List to store image information (size in pixels and file size)
+    
     # Convert to grayscale
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -28,7 +28,6 @@ def process_image(image):
     filtered_contours = [contour for contour in contours if cv2.contourArea(contour) > min_area]
 
     # Display each cropped rice grain and collect selection information
-    max_images_per_row = 4 # Define the maximum number of images per row
     for i, contour in enumerate(filtered_contours):
         # Get bounding box for each contour
         x, y, w, h = cv2.boundingRect(contour)
@@ -36,18 +35,14 @@ def process_image(image):
         # Crop the region
         cropped_image = image[y:y + h, x:x + w]
 
-        # Display the cropped rice grain
-        if i % max_images_per_row == 0:
-            col = st.columns(max_images_per_row)  # Create a new row
-        with col[i % max_images_per_row]:
-            st.image(cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB), caption=f"Rice Grain {i + 1}")
+        # Encode image to bytes
+        _, buffer = cv2.imencode('.png', cropped_image)
+        image_size_kb = len(buffer) / 1024  # Size in KB
+        image_size_mb = image_size_kb / 1024  # Size in MB
 
-            # Checkbox for selection
-            if st.checkbox(f"Select Rice Grain {i + 1}", key=f"select_{i}"):
-                selections.append((f"Rice Grain {i + 1}", cropped_image))
+        image_info.append((i, w, h, image_size_kb, image_size_mb, cropped_image))
 
-    st.write(f"Extracted and displayed {len(filtered_contours)} rice grains.")
-    return selections
+    return image_info
 
 # Function to save selected images to a zip file with higher quality
 def save_to_zip(selections):
@@ -99,7 +94,42 @@ if uploaded_file is not None:
     st.image(image, caption='Original Image', use_column_width=True)
 
     # Process the image and get selected images
-    selections = process_image(image)
+    image_info = process_image(image)
+
+    # Define size filter options
+    size_filter = st.selectbox("Select size range to display images:",
+                               ["All", "0-0.03 MB", "0.031-0.06 MB", "0.061-0.09 MB", ">0.09 MB"])
+
+    # Filter images based on selected size range
+    if size_filter == "0-0.03 MB":
+        filtered_images = [info for info in image_info if info[4] <= 0.03]
+    elif size_filter == "0.031-0.06 MB":
+        filtered_images = [info for info in image_info if 0.031 <= info[4] <= 0.06]
+    elif size_filter == "0.061-0.09 MB":
+        filtered_images = [info for info in image_info if 0.061 <= info[4] <= 0.09]
+    elif size_filter == ">0.09 MB":
+        filtered_images = [info for info in image_info if info[4] > 0.09]
+    else:
+        filtered_images = image_info
+
+    # Display filtered images
+    max_images_per_row = 4
+    checkboxes = []
+    for i, (idx, w, h, size_kb, size_mb, cropped_image) in enumerate(filtered_images):
+        if i % max_images_per_row == 0:
+            col = st.columns(max_images_per_row)  # Create a new row
+        with col[i % max_images_per_row]:
+            st.image(cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB), caption=f"Rice Grain {idx + 1}")
+            st.write(f"Size: {w} x {h} pixels")
+            st.write(f"File Size: {size_kb:.2f} KB ({size_mb:.2f} MB)")
+            checkbox = st.checkbox(f"Select Rice Grain {idx + 1}", key=f"select_{idx}")
+            checkboxes.append((checkbox, (f"Rice Grain {idx + 1}", cropped_image)))
+
+
+    # Update selections based on checkboxes
+    selections = [img_info for selected, img_info in checkboxes if selected]
+
+    st.write(f"Extracted and displayed {len(filtered_images)} rice grains.")
 
     # Button to extract selected images
     if st.button("Extract"):
