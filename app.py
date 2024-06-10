@@ -61,25 +61,70 @@ def save_to_zip(selections):
 
 # Streamlit app
 st.set_page_config(layout="wide")  # Utilize full screen
-st.title("Rice Grain Extraction")
-
-# Add background color
 st.markdown(
     """
     <style>
     .reportview-container {
-        background: #f0f2f6
+        background: url("https://i.imgur.com/8a7Ujv8.jpg");
+        background-size: cover;
+        color: #eeeeee;
+    }
+    .sidebar .sidebar-content {
+        background: #393e46;
+        color: #00adb5;
+    }
+    .css-18e3th9 {
+        padding: 10px;
+    }
+    .css-1d391kg p {
+        color: #eeeeee;
+    }
+    .stButton button {
+        background-color: #00adb5;
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        cursor: pointer;
+    }
+    .stButton button:hover {
+        background-color: white;
+        color: black;
+        border: 2px solid #00adb5;
+    }
+    .css-1offfwp {
+        background-color: #00adb5;
+        color: white;
+    }
+    .css-1l3cr7v img {
+        border: 2px solid #00adb5;
+        border-radius: 4px;
+        padding: 5px;
+        background: #393e46;
+    }
+    .css-1offfwp .css-1l3cr7v p {
+        color: #eeeeee;
+    }
+    .selectbox, .checkbox, .file_uploader {
+        color: #00adb5;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
 
+st.title("🌾 Rice Grain Extraction")
+
 # Instructions
 with st.expander("Instructions", expanded=True):
-    st.markdown("1. Upload an image containing rice grains.")
-    st.markdown("2. Select the rice grains you want to extract.")
-    st.markdown("3. Click the 'Extract' button to download the selected rice grains as a ZIP file.")
+    st.markdown("<p style='color:#eeeeee;'>1. Upload an image containing rice grains.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#eeeeee;'>2. Select the rice grains you want to extract.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#eeeeee;'>3. Click the 'Extract' button to download the selected rice grains as a ZIP file.</p>", unsafe_allow_html=True)
 
 # File uploader for image input
 uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
@@ -115,22 +160,22 @@ if uploaded_file is not None:
     # Display filtered images
     max_images_per_row = 4
     checkboxes = []
-    select_all = st.checkbox("Select All")
+    select_all = st.checkbox("Select All", key="select_all", value=False)
 
     for i, (idx, w, h, size_kb, size_mb, cropped_image) in enumerate(filtered_images):
         if i % max_images_per_row == 0:
             col = st.columns(max_images_per_row)  # Create a new row
         with col[i % max_images_per_row]:
             st.image(cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB), caption=f"Rice Grain {idx + 1}")
-            st.write(f"Size: {w} x {h} pixels")
-            st.write(f"File Size: {size_kb:.2f} KB ({size_mb:.2f} MB)")
+            st.write(f"<p style='color:#eeeeee;'>Size: {w} x {h} pixels</p>", unsafe_allow_html=True)
+            st.write(f"<p style='color:#eeeeee;'>File Size: {size_kb:.2f} KB ({size_mb:.2f} MB)</p>", unsafe_allow_html=True)
             checkbox = st.checkbox(f"Select Rice Grain {idx + 1}", key=f"select_{idx}", value=select_all)
             checkboxes.append((checkbox, (f"Rice Grain {idx + 1}", cropped_image)))
 
     # Update selections based on checkboxes
     selections = [img_info for selected, img_info in checkboxes if selected]
 
-    st.write(f"Extracted and displayed {len(filtered_images)} rice grains.")
+    st.write(f"<p style='color:#eeeeee;'>Extracted and displayed {len(filtered_images)} rice grains.</p>", unsafe_allow_html=True)
 
     # Button to extract selected images
     if st.button("Extract"):
