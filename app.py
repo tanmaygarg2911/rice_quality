@@ -115,6 +115,8 @@ if uploaded_file is not None:
     # Display filtered images
     max_images_per_row = 4
     checkboxes = []
+    select_all = st.checkbox("Select All")
+
     for i, (idx, w, h, size_kb, size_mb, cropped_image) in enumerate(filtered_images):
         if i % max_images_per_row == 0:
             col = st.columns(max_images_per_row)  # Create a new row
@@ -122,9 +124,8 @@ if uploaded_file is not None:
             st.image(cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB), caption=f"Rice Grain {idx + 1}")
             st.write(f"Size: {w} x {h} pixels")
             st.write(f"File Size: {size_kb:.2f} KB ({size_mb:.2f} MB)")
-            checkbox = st.checkbox(f"Select Rice Grain {idx + 1}", key=f"select_{idx}")
+            checkbox = st.checkbox(f"Select Rice Grain {idx + 1}", key=f"select_{idx}", value=select_all)
             checkboxes.append((checkbox, (f"Rice Grain {idx + 1}", cropped_image)))
-
 
     # Update selections based on checkboxes
     selections = [img_info for selected, img_info in checkboxes if selected]
