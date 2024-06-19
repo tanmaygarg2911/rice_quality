@@ -8,10 +8,10 @@ import zipfile
 from PIL import Image
 
 # Function to resize the image if it's too large
-def resize_image_if_needed(image, max_pixels=178956970):
+def resize_image(image, max_width=1024, max_height=1024):
     h, w = image.shape[:2]
-    if h * w > max_pixels:
-        scale_factor = (max_pixels / (h * w)) ** 0.5
+    if h > max_height or w > max_width:
+        scale_factor = min(max_width / w, max_height / h)
         new_w = int(w * scale_factor)
         new_h = int(h * scale_factor)
         image = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
@@ -37,7 +37,6 @@ def process_image(image, min_area):
     # Filter out small contours
     filtered_contours = [contour for contour in contours if cv2.contourArea(contour) > min_area]
 
-    # Display each cropped rice grain and collect selection information
     for i, contour in enumerate(filtered_contours):
         # Get bounding box for each contour
         x, y, w, h = cv2.boundingRect(contour)
@@ -57,7 +56,7 @@ def process_image(image, min_area):
 # Function to save selected images to a zip file with higher quality
 def save_to_zip(selections):
     with tempfile.TemporaryDirectory() as tmpdirname:
-        zip_path = os.path.join(tmpdirname, "selected_rice_grains.zip")
+        zip_path = os.path.join(tmpdirname, "selected_grains.zip")
         with zipfile.ZipFile(zip_path, 'w') as zipf:
             for i, (name, image) in enumerate(selections):
                 image_filename = f"{name}.png"
@@ -128,13 +127,13 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.title("🌾 Rice Grain Extraction")
+st.title("🌾Grain Extraction")
 
 # Instructions
 with st.expander("Instructions", expanded=True):
-    st.markdown("<p style='color:#eeeeee;'>1. Upload an image containing rice grains.</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#eeeeee;'>2. Select the rice grains you want to extract.</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#eeeeee;'>3. Click the 'Extract' button to download the selected rice grains as a ZIP file.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#eeeeee;'>1. Upload an image containing grains.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#eeeeee;'>2. Select the grains you want to extract.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#eeeeee;'>3. Click the 'Extract' button to download the selected grains as a ZIP file.</p>", unsafe_allow_html=True)
 
 # Sidebar for input
 with st.sidebar:
@@ -142,7 +141,7 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
     # User input for minimum area
-    min_area = st.number_input("Enter the minimum area for rice grains to be extracted:", value=3000, min_value=0)
+    min_area = st.number_input("Enter the minimum area for grains to be extracted:", value=3000, min_value=0)
 
     # Define size filter options
     size_filter = st.selectbox("Select size range to display images:",
@@ -158,16 +157,16 @@ with st.sidebar:
 if uploaded_file is not None:
     # Read the image
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
-    image = cv2.imdecode(file_bytes, 1)
+    original_image = cv2.imdecode(file_bytes, 1)
 
-    # Resize image if needed
-    image = resize_image_if_needed(image)
+    # Resize image for processing
+    resized_image = resize_image(original_image)
 
     # Display the original image
-    st.image(image, caption='Original Image', use_column_width=True)
+    st.image(original_image, caption='Original Image', use_column_width=True)
 
-    # Process the image and get selected images
-    image_info = process_image(image, min_area)
+    # Process the resized image and get selected images
+    image_info = process_image(resized_image, min_area)
 
     # Filter images based on selected size range
     if size_filter == "0-0.03 MB":
@@ -193,11 +192,11 @@ if uploaded_file is not None:
         if i % max_images_per_row == 0:
             col = st.columns(max_images_per_row)  # Create a new row
         with col[i % max_images_per_row]:
-            st.image(cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB), caption=f"Rice Grain {idx + 1}")
+            st.image(cv2.cvtColor(cropped_image, cv2.COLOR_BGR2RGB), caption=f"Grain {idx + 1}")
             st.write(f"<p style='color:#eeeeee;'>Size: {w} x {h} pixels</p>", unsafe_allow_html=True)
             st.write(f"<p style='color:#eeeeee;'>File Size: {size_kb:.2f} KB ({size_mb:.2f} MB)</p>", unsafe_allow_html=True)
-            checkbox = st.checkbox(f"Select Rice Grain {idx + 1}", key=f"select_{idx}", value=select_all)
-            checkboxes.append((checkbox, (f"Rice Grain {idx + 1}", cropped_image)))
+            checkbox = st.checkbox(f"Select Grain {idx + 1}", key=f"select_{idx}", value=select_all)
+            checkboxes.append((checkbox, (f"Grain {idx + 1}", cropped_image)))
 
     # Update selections based on checkboxes
     selections = [img_info for selected, img_info in checkboxes if selected]
@@ -210,6 +209,6 @@ if uploaded_file is not None:
     if extract_button:
         if selections:
             zip_data = save_to_zip(selections)
-            st.download_button(label="Download ZIP", data=zip_data, file_name="selected_rice_grains.zip", mime="application/zip")
+            st.sidebar.download_button(label="Download ZIP", data=zip_data, file_name="selected_grains.zip", mime="application/zip")
         else:
-            st.warning("No rice grains selected. Please select at least one rice grain.")
+            st.warning("No grains selected. Please select at least one grain.")
