@@ -13,8 +13,8 @@ This repository was originally forked from [🌾 rice_quality](https://github.co
 ## 📌 Repository Activity Timeline  
 📅 **June 24, 2024** – Forked the original repository.  
 🛠 **July 4, 2024** – Introduced `app5.py`, which included the scale factor feature.  
-📤 **Date** – Shared the changes with the repository owner via Google Drive.  
-✅ **Date** – Repository owner committed the changes to the upstream `app.py`.  
+📤 **July 4, 2024** – Shared the changes with the repository owner via Google Drive.  
+✅ **July 7, 2024** – Repository owner committed the changes to the upstream `app.py`.  
 🔧 **October 7, 2024** – Additional modifications made to `app.py` in the main repository.  
 📁 **February 25, 2025** – Archiving this fork as a historical record.  
 
