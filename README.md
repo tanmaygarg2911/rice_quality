@@ -1,4 +1,4 @@
-# 📂 Archived Repository: Fork of [🌾 rice_quality]  
+# 📂 Archived Repository: Fork of [🌾 rice_quality](https://github.com/sakshamraj4/rice_quality)
 
 ![📌 Archived](https://img.shields.io/badge/status-archived-red)  
 
